@@ -70,8 +70,17 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public void onClick(View v) {
                 Log.d("Test", "Hello World");
-                token = WSClient.Login(ed1.getText().toString(),ed2.getText().toString());
-                System.out.println(token);
+                // point 1
+                WSClient.Login(ed1.getText().toString(),ed2.getText().toString())
+                        .thenAccept(token -> {
+                            // point 2
+                            Log.d("Test", token);
+                        })
+                        .exceptionally(throwable -> {
+                            // point 2e
+                            Log.e("Test", "Error!!!", throwable);
+                            return null;
+                        });
                 if(ed1.getText().toString().equals("admin") &&
                         ed2.getText().toString().equals("admin")) {
                     Toast.makeText(getApplicationContext(),
