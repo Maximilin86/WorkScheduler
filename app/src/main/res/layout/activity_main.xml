@@ -7,101 +7,94 @@
     android:layout_height="match_parent"
     android:paddingTop="?attr/actionBarSize">
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="0dp"
-        android:background="?android:attr/windowBackground"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
-
     <fragment
         android:id="@+id/nav_host_fragment_activity_main"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:defaultNavHost="true"
-        app:layout_constraintBottom_toTopOf="@id/nav_view"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
         app:navGraph="@navigation/mobile_navigation" />
 
     <RelativeLayout
+        android:id="@+id/root"
         android:layout_width="match_parent"
-        android:layout_height = "match_parent" android:paddingLeft= "@dimen/activity_horizontal_margin"
-        android:paddingRight = "@dimen/activity_horizontal_margin"
-        android:paddingTop = "@dimen/activity_vertical_margin"
-        android:paddingBottom = "@dimen/activity_vertical_margin" tools:context = ".MainActivity">
-
-        <TextView android:text = "Войдите в приложение" android:layout_width="wrap_content"
-            android:layout_height = "wrap_content"
-            android:id = "@+id/textview"
-            android:textSize = "35dp"
-            android:layout_alignParentTop = "true"
-            android:layout_centerHorizontal = "true" />
+        android:layout_height="match_parent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        tools:context=".MainActivity"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="28dp">
 
         <TextView
-            android:layout_width = "wrap_content"
-            android:layout_height = "wrap_content"
-            android:text = "Планировщик смен"
-            android:id = "@+id/textView"
-            android:layout_below = "@+id/textview"
-            android:layout_centerHorizontal = "true"
-            android:textColor = "#ff7aff24"
-            android:textSize = "35dp" />
-
-        <EditText
-            android:layout_width = "wrap_content"
-            android:layout_height = "wrap_content"
-            android:id = "@+id/editText"
-            android:hint = "Введите логин"
-            android:focusable = "true"
-            android:textColorHighlight = "#ff7eff15"
-            android:textColorHint = "#ffff25e6"
-            android:layout_marginTop = "46dp"
-            android:layout_below = "@+id/imageView"
-            android:layout_alignParentLeft = "true"
-            android:layout_alignParentStart = "true"
-            android:layout_alignParentRight = "true"
-            android:layout_alignParentEnd = "true" />
-
-        <ImageView
+            android:id="@+id/textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:text="Войдите в приложение"
+            android:textSize="35dp" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textview"
+            android:layout_centerHorizontal="true"
+            android:text="Планировщик смен"
+            android:textColor="#ff7aff24"
+            android:textSize="35dp" />
+
+        <EditText
+            android:id="@+id/editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/imageView"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="46dp"
+            android:focusable="true"
+            android:hint="Введите логин"
+            android:textColorHighlight="#ff7eff15"
+            android:textColorHint="#ffff25e6" />
+
+        <ImageView
             android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
 
             android:layout_below="@+id/textView"
             android:layout_centerHorizontal="true" />
 
         <EditText
+            android:id="@+id/editText2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:ems="10"
-            android:id="@+id/editText2"
             android:layout_below="@+id/editText"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/editText"
             android:layout_alignEnd="@+id/editText"
-            android:textColorHint="#ffff299f"
-            android:hint="Пароль" />
+            android:layout_alignRight="@+id/editText"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:ems="10"
+            android:hint="Пароль"
+            android:inputType="textPassword"
+            android:textColorHint="#ffff299f" />
 
         <TextView
+            android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Осталось попыток:"
-            android:id="@+id/textView2"
             android:layout_below="@+id/editText2"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:text="Осталось попыток:"
             android:textSize="25dp" />
 
         <TextView

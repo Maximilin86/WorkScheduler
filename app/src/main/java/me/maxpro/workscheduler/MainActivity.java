@@ -1,16 +1,9 @@
 package me.maxpro.workscheduler;
 
+import android.content.Intent;
 import android.os.Bundle;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import me.maxpro.workscheduler.databinding.ActivityMainBinding;
 
 //public class MainActivity extends AppCompatActivity {
 //
@@ -35,33 +28,46 @@ import me.maxpro.workscheduler.databinding.ActivityMainBinding;
 //    }
 //
 //}
-import android.app.Activity;
 import android.graphics.Color;
-import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity  {
     Button b1,b2;
     EditText ed1,ed2;
+    RelativeLayout root;
     String token;
     TextView tx1;
     int counter = 3;
+
+    private void setEnabledScene(boolean value) {
+        for (int i = 0; i < root.getChildCount(); i++) {
+            root.getChildAt(i).setEnabled(value);
+        }
+    }
+
+    private void openMenuActivity(String token) {
+        Log.d("Test", token);
+        Intent a = new Intent(MainActivity.this, MenuActivity.class);
+        a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+        startActivity(a);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         b1 = (Button)findViewById(R.id.button);
         ed1 = (EditText)findViewById(R.id.editText);
         ed2 = (EditText)findViewById(R.id.editText2);
-
+        root = (RelativeLayout) findViewById(R.id.root);
         b2 = (Button)findViewById(R.id.button2);
         tx1 = (TextView)findViewById(R.id.textView3);
         tx1.setVisibility(View.GONE);
@@ -71,16 +77,21 @@ public class MainActivity extends AppCompatActivity  {
             public void onClick(View v) {
                 Log.d("Test", "Hello World");
                 // point 1
+                setEnabledScene(false);
                 WSClient.Login(ed1.getText().toString(),ed2.getText().toString())
                         .thenAccept(token -> {
                             // point 2
-                            Log.d("Test", token);
+                            WSClient.MAIN.execute(() -> setEnabledScene(true));
+                            Log.d("Test", "is GUI thread: " + Looper.getMainLooper().isCurrentThread());
+                            openMenuActivity(token);
                         })
                         .exceptionally(throwable -> {
                             // point 2e
+                            WSClient.MAIN.execute(() -> setEnabledScene(true));
+                            Log.d("Test", "is GUI thread: " + Looper.getMainLooper().isCurrentThread());
                             Log.e("Test", "Error!!!", throwable);
                             return null;
-                        });
+                        });                        ;
                 if(ed1.getText().toString().equals("admin") &&
                         ed2.getText().toString().equals("admin")) {
                     Toast.makeText(getApplicationContext(),
