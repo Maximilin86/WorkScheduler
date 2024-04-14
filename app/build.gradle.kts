@@ -61,6 +61,7 @@ dependencies {
     implementation("org.apache.httpcomponents.client5:httpclient5:5.3.1")
 
     // custom calendar view
-    implementation("com.squareup:android-times-square:1.6.5@aar")
+    implementation("com.github.sundeepk:compact-calendar-view:3.0.0")
+
 
 }

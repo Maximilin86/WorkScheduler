@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity  {
 
     private void openMenuActivity(String token) {
         Log.d("Test", token);
-        Intent a = new Intent(MainActivity.this, MenuActivity.class);
+        Intent a = new Intent(MainActivity.this, AdminActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         startActivity(a);
     }
