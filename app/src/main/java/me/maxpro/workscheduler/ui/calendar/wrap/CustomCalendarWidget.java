@@ -17,13 +17,14 @@ import java.util.function.Consumer;
 public class CustomCalendarWidget {
 
 
-    private final CompactCalendarView view;
+    public final CompactCalendarView view;
 
     float unselectedBrightness = 0.8f;
     float selectedBrightness = 0.99f;
     final Color selectedColor = Color.valueOf(withValue(0xFFA5A5A5, unselectedBrightness));
     final Color currentDayColor = Color.valueOf(withValue(0xFFBFBFBF, unselectedBrightness));
     final List<Consumer<Date>> dayChangedCallbacks = new ArrayList<>();
+    final List<Consumer<Date>> monthChangedCallbacks = new ArrayList<>();
 
     public CustomCalendarWidget(CompactCalendarView view) {
         this.view = view;
@@ -69,6 +70,7 @@ public class CustomCalendarWidget {
             public void onMonthScroll(Date firstDayOfNewMonth) {
                 view.setCurrentSelectedDayBackgroundColor(getCurrentColor(firstDayOfNewMonth));
                 for (Consumer<Date> callback : dayChangedCallbacks) callback.accept(firstDayOfNewMonth);
+                for (Consumer<Date> callback : monthChangedCallbacks) callback.accept(firstDayOfNewMonth);
             }
         });
     }
@@ -115,6 +117,9 @@ public class CustomCalendarWidget {
 
     public void onDayChanged(Consumer<Date> callback) {
         this.dayChangedCallbacks.add(callback);
+    }
+    public void onMonthChanged(Consumer<Date> callback) {
+        this.monthChangedCallbacks.add(callback);
     }
 
 }

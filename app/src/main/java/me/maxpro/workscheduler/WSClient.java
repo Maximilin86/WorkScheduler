@@ -58,38 +58,6 @@ public class WSClient {
     public static final Executor MAIN = HANDLER::post;
 
 
-    public static String formatHexDump(byte[] array, int offset, int length) {
-        final int width = 16;
-
-        StringBuilder builder = new StringBuilder();
-
-        for (int rowOffset = offset; rowOffset < offset + length; rowOffset += width) {
-            builder.append(String.format("%06d:  ", rowOffset));
-
-            for (int index = 0; index < width; index++) {
-                if (rowOffset + index < array.length) {
-                    builder.append(String.format("%02x ", array[rowOffset + index]));
-                } else {
-                    builder.append("   ");
-                }
-            }
-
-            if (rowOffset < array.length) {
-                int asciiWidth = Math.min(width, array.length - rowOffset);
-                builder.append("  |  ");
-                try {
-                    builder.append(new String(array, rowOffset, asciiWidth, "UTF-8").replaceAll("\r\n", " ").replaceAll("\n", " "));
-                } catch (UnsupportedEncodingException ignored) {
-                    //If UTF-8 isn't available as an encoding then what can we do?!
-                }
-            }
-
-            builder.append(String.format("%n"));
-        }
-
-        return builder.toString();
-    }
-
     private static void handleServerError(JSONObject jsonResponse) {
         if(!jsonResponse.has("error")) return;
         try {
@@ -160,7 +128,7 @@ public class WSClient {
                 jo.put("token", token);
                 jo.put("desireId", desireId);
             });
-            String json = post_request(jo.toString());
+            String json = post_request("/set_desire", jo.toString());
             JSONObject jsonResponse = parseServerAnswer(json);
             handleServerError(jsonResponse);
             return "OK";
@@ -175,7 +143,7 @@ public class WSClient {
                 jo.put("user", user);
                 jo.put("password", password);
             });
-            String json = post_request(jo.toString());
+            String json = post_request("/login", jo.toString());
             JSONObject jsonResponse = parseServerAnswer(json);
             handleServerError(jsonResponse);
             String token = getStringOrNull(jsonResponse, "token");
@@ -195,11 +163,11 @@ public class WSClient {
     }
 
     @NonNull
-    private static String post_request(String jsonString) {
+    private static String post_request(String path, String jsonString) {
         StringEntity requestEntity = new StringEntity(
                 jsonString,
                 ContentType.APPLICATION_JSON);
-        HttpPost postMethod = new HttpPost("http://192.168.1.104:8000/login");
+        HttpPost postMethod = new HttpPost("http://192.168.0.108:8000" + path);
         postMethod.setEntity(requestEntity);
 
 

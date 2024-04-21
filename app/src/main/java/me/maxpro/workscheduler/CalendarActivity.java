@@ -2,18 +2,23 @@ package me.maxpro.workscheduler;
 
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import java.util.Date;
 
+import me.maxpro.workscheduler.ui.calendar.CalendarBlockedFragment;
 import me.maxpro.workscheduler.ui.calendar.CalendarFragment;
 import me.maxpro.workscheduler.ui.calendar.CalendarUserFragment;
 import me.maxpro.workscheduler.ui.calendar.wrap.CustomCalendarWidget;
 
 
 public class CalendarActivity extends AppCompatActivity {
+
+    private static final String CALENDAR_FRAGMENT = "CALENDAR_FRAGMENT";
 
     private CustomCalendarWidget calendarView;
     private TextView currentMonth;
@@ -57,17 +62,7 @@ public class CalendarActivity extends AppCompatActivity {
         currentDay.setText(formatDay(new Date()));
         calendarView.onDayChanged(date -> currentDay.setText(formatDay(date)));
 
-
-        Bundle bundle = new Bundle();
-        bundle.putString("token", "");
-
-
-        final String CALENDAR_FRAGMENT = "CALENDAR_FRAGMENT";
-        getSupportFragmentManager().beginTransaction()
-                .setReorderingAllowed(true)
-                .add(R.id.fragment_placeholder, CalendarUserFragment.class, bundle, CALENDAR_FRAGMENT)
-//                .add(R.id.fragment_placeholder, CalendarAdminFragment.class, bundle)
-                .commit();
+        updateControlFragment(calendarView.view.getFirstDayOfCurrentMonth());
 
         calendarView.onDayChanged(date -> {
             CalendarFragment calendarFragment = (CalendarFragment) getSupportFragmentManager().findFragmentByTag(CALENDAR_FRAGMENT);
@@ -75,6 +70,42 @@ public class CalendarActivity extends AppCompatActivity {
                 calendarFragment.onSelectDate(date);
             }
         });
+        calendarView.onMonthChanged(date -> {
+            updateControlFragment(date);
+        });
+    }
+
+    private void updateControlFragment(Date date) {
+        Bundle bundle = new Bundle();
+        bundle.putString("token", "");
+
+        int viewMonth = date.getYear() * 12 + date.getMonth();
+        Date now = new Date();
+        int nowMonth = now.getYear() * 12 + now.getMonth();
+
+        CalendarFragment calendarFragment = (CalendarFragment) getSupportFragmentManager().findFragmentByTag(CALENDAR_FRAGMENT);
+        if (calendarFragment != null) {
+            // удалить старый фрагмент
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .remove((Fragment) calendarFragment)
+                    .commit();
+            Log.d("Test", "Removed");
+        }
+        if (viewMonth <= nowMonth) {
+            // добавить блокирующий фрагмент
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.fragment_placeholder, CalendarBlockedFragment.class, bundle, CALENDAR_FRAGMENT)
+                    .commit();
+        } else {
+            // добавить фрагмент с контролем
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.fragment_placeholder, CalendarUserFragment.class, bundle, CALENDAR_FRAGMENT)
+    //                .add(R.id.fragment_placeholder, CalendarAdminFragment.class, bundle)
+                    .commit();
+        }
     }
 
     public CustomCalendarWidget getCalendarWidget() {
