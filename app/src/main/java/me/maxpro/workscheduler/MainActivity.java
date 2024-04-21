@@ -1,5 +1,8 @@
 package me.maxpro.workscheduler;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -29,7 +32,6 @@ import androidx.appcompat.app.AppCompatActivity;
 //
 //}
 import android.graphics.Color;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity  {
 
     private void openMenuActivity(String token) {
         Log.d("Test", token);
-        Intent a = new Intent(MainActivity.this, AdminActivity.class);
+        Intent a = new Intent(MainActivity.this, CalendarActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         startActivity(a);
     }
@@ -75,32 +77,19 @@ public class MainActivity extends AppCompatActivity  {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Test", "Hello World");
-                // point 1
                 setEnabledScene(false);
                 WSClient.Login(ed1.getText().toString(),ed2.getText().toString())
-                        .thenAccept(token -> {
-                            // point 2
-                            WSClient.MAIN.execute(() -> setEnabledScene(true));
-                            Log.d("Test", "is GUI thread: " + Looper.getMainLooper().isCurrentThread());
-                            openMenuActivity(token);
-                        })
-                        .exceptionally(throwable -> {
-                            // point 2e
-                            WSClient.MAIN.execute(() -> setEnabledScene(true));
-                            Log.d("Test", "is GUI thread: " + Looper.getMainLooper().isCurrentThread());
-                            Log.e("Test", "Error!!!", throwable);
+                        .whenCompleteAsync((s, throwable) -> setEnabledScene(true), WSClient.MAIN)  // в любом случае
+                        .thenAcceptAsync(token -> openMenuActivity(token), WSClient.MAIN)  // при успехе
+                        .handleAsync((unused, throwable) -> {  // при ошибке
+                            WSClient.showNetworkError(getApplicationContext(), throwable);
                             return null;
-                        });                        ;
-                if(ed1.getText().toString().equals("admin") &&
-                        ed2.getText().toString().equals("admin")) {
-                    Toast.makeText(getApplicationContext(),
-                            "Redirecting...",Toast.LENGTH_SHORT).show();
-                }
-                else{
+                        }, WSClient.MAIN);
+                if(ed1.getText().toString().equals("admin") && ed2.getText().toString().equals("admin")) {
+                    Toast.makeText(getApplicationContext(), "Redirecting...", Toast.LENGTH_SHORT).show();
+                } else{
                     Toast.makeText(getApplicationContext(), "Неправильно введен логин или пароль",Toast.LENGTH_SHORT).show();
-
-                            tx1.setVisibility(View.VISIBLE);
+                    tx1.setVisibility(View.VISIBLE);
                     tx1.setBackgroundColor(Color.RED);
                     counter--;
                     tx1.setText(Integer.toString(counter));
