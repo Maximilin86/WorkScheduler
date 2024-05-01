@@ -111,10 +111,6 @@ public class CustomCalendarWidget {
         return selectedColor.toArgb();
     }
 
-    public Date getFirstDayOfCurrentMonth() {
-        return view.getFirstDayOfCurrentMonth();
-    }
-
     public void onDayChanged(Consumer<Date> callback) {
         this.dayChangedCallbacks.add(callback);
     }

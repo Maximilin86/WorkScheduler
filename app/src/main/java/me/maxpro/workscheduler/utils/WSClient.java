@@ -1,4 +1,4 @@
-package me.maxpro.workscheduler;
+package me.maxpro.workscheduler.utils;
 
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -13,7 +13,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -101,8 +100,9 @@ public class WSClient {
         if (throwable instanceof ClientException) {
             message = ((ClientException) throwable).getDisplayText();
         } else {
-            message = throwable.getMessage();
+            message = throwable.getClass().getSimpleName() + " " + throwable.getMessage();
         }
+        throwable.printStackTrace();
         new AlertDialog.Builder(context)
                 .setTitle("Сетевая Ошибка")
                 .setMessage(message)
@@ -136,8 +136,22 @@ public class WSClient {
         return future.thenApplyAsync((a) -> a, MAIN);  // move to main thread
     }
 
-    static public CompletableFuture<String> Login(String user, String password) {  // Main thread
-        final CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {  // Network thread
+    public static class LoginArgs {
+
+        public final String token;
+        public final WSSession.Role role;
+        public final String displayName;
+
+        public LoginArgs(String token, WSSession.Role role, String displayName) {
+            this.token = token;
+            this.role = role;
+            this.displayName = displayName;
+        }
+
+    }
+
+    static public CompletableFuture<LoginArgs> Login(String user, String password) {  // Main thread
+        final CompletableFuture<LoginArgs> future = CompletableFuture.supplyAsync(() -> {  // Network thread
             JSONObject jo = new JSONObject();
             buildMessage(() -> {
                 jo.put("user", user);
@@ -147,8 +161,14 @@ public class WSClient {
             JSONObject jsonResponse = parseServerAnswer(json);
             handleServerError(jsonResponse);
             String token = getStringOrNull(jsonResponse, "token");
+            String roleStr = getStringOrNull(jsonResponse, "role");
+            String displayName = getStringOrNull(jsonResponse, "display-name");
             if(token == null || token.isEmpty()) throw new ClientException("token is not found", "Токен не найден");
-            return token;
+            if(roleStr == null || roleStr.isEmpty()) throw new ClientException("role is not found", "Роль не установлена");
+            WSSession.Role role = WSSession.Role.fromString(roleStr);
+            if(role == null) throw new ClientException("role is unknown", "Неизвестная роль " + roleStr);
+            if(displayName == null || displayName.isEmpty()) throw new ClientException("token is not found", "Токен не найден");
+            return new LoginArgs(token, role, displayName);
         }, EXECUTOR);
         return future.thenApplyAsync((a) -> a, MAIN);  // move to main thread
     }
@@ -167,7 +187,8 @@ public class WSClient {
         StringEntity requestEntity = new StringEntity(
                 jsonString,
                 ContentType.APPLICATION_JSON);
-        HttpPost postMethod = new HttpPost("http://192.168.0.108:8000" + path);
+        String url = WSSession.getInstance().url;
+        HttpPost postMethod = new HttpPost(url + path);
         postMethod.setEntity(requestEntity);
 
 
@@ -185,9 +206,12 @@ public class WSClient {
         } catch (IOException e) {
             throw new ClientException("Connect server error", e, "Нет ответа от сервера");
         }
+        int statusCode = rawResponse.getCode();
+        if(statusCode != 200) {
+            throw new ClientException("Network error", "Сетевая ошибка " + rawResponse.getReasonPhrase());
+        }
 
         try {
-            int statusCode = rawResponse.getCode();
             String json = EntityUtils.toString(rawResponse.getEntity());
             Log.d("Test", "POST Response: " + statusCode + " " + json);
             return json;
