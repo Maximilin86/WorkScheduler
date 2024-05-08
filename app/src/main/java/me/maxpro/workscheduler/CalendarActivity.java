@@ -1,33 +1,52 @@
 package me.maxpro.workscheduler;
 
+import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
+import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import me.maxpro.workscheduler.client.ClientUtils;
+import me.maxpro.workscheduler.client.data.MonthData;
+import me.maxpro.workscheduler.client.data.Order;
+import me.maxpro.workscheduler.client.data.UsersData;
 import me.maxpro.workscheduler.databinding.ActivityCalendarBinding;
 import me.maxpro.workscheduler.ui.calendar.CalendarAdminFragment;
 import me.maxpro.workscheduler.ui.calendar.CalendarBlockedFragment;
-import me.maxpro.workscheduler.ui.calendar.CalendarFragment;
 import me.maxpro.workscheduler.ui.calendar.CalendarUserFragment;
 import me.maxpro.workscheduler.ui.calendar.wrap.CustomCalendarWidget;
 import me.maxpro.workscheduler.utils.RuLang;
+import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.utils.WSSession;
 
 
 public class CalendarActivity extends AppCompatActivity {
 
-    private static final String CALENDAR_FRAGMENT = "CALENDAR_FRAGMENT";
-
     private ActivityCalendarBinding binding;
+    private CustomCalendarWidget customCalendarWidget;
+    private Date selectedDate;
+    private final Map<Integer, MonthData> loadedMonths = new HashMap<>();
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.calendar_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +57,22 @@ public class CalendarActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Календарь");
         }
 
-        CustomCalendarWidget customCalendarWidget = new CustomCalendarWidget(binding.compactcalendarView);
+//        LoaderManager.getInstance(this).restartLoader(0, null, mLoaderCallbacks);
+
+        customCalendarWidget = new CustomCalendarWidget(binding.compactcalendarView);
 
         Date viewDate = new Date();
         if(getIntent().getBooleanExtra("start-with-next-month", false)) {
             viewDate.setMonth(viewDate.getMonth() + 1);
         }
+        selectedDate = viewDate;
         binding.compactcalendarView.setCurrentDate(viewDate);
+
+
+        requestLoadInitial(viewDate);
 
         // Показывание текущего месяца
         binding.currentMonth.setText(RuLang.formatMonthYear(binding.compactcalendarView.getFirstDayOfCurrentMonth()));
@@ -54,54 +80,121 @@ public class CalendarActivity extends AppCompatActivity {
 
         // показывание выбранного дня
         binding.currentDay.setText(RuLang.formatDayMonth(new Date()));
-        customCalendarWidget.onDayChanged(date -> binding.currentDay.setText(RuLang.formatDayMonth(date)));
-
-        updateControlFragment(customCalendarWidget.view.getFirstDayOfCurrentMonth());
-
         customCalendarWidget.onDayChanged(date -> {
-            CalendarFragment calendarFragment = (CalendarFragment) getSupportFragmentManager().findFragmentByTag(CALENDAR_FRAGMENT);
-            if (calendarFragment != null) {
-                calendarFragment.onSelectDate(date);
-            }
-            if(getIntent().getBooleanExtra("can-edit-since-now", false)) {
+            selectedDate = date;
+            if(loadedMonths.containsKey(calcMonths(date))) {  // prevent change dates while data loading
                 updateControlFragment(date);
             }
         });
         customCalendarWidget.onMonthChanged(date -> {
-            updateControlFragment(date);
+            if(!loadedMonths.containsKey(calcMonths(date))) {
+                removeControlFragment();
+                requestLoadDataForMonth(date);
+            }
         });
+    }
+
+    private void setEnabledScene(boolean value) {
+
+    }
+
+    private void updateMonthData(Date date, MonthData data) {
+        for (Map.Entry<Integer, List<Order>> entry : data.ordersByDay.entrySet()) {
+            int dayOfMonth = entry.getKey();  // [1:31]
+            date.setDate(dayOfMonth);
+            customCalendarWidget.addEvent(date, Color.GREEN, "Event");
+        }
+        if(compareMonth(date, selectedDate) != 0) return;
+        loadedMonths.put(calcMonths(date), data);
+        updateControlFragment(selectedDate);
+    }
+
+    private void updateUsers(UsersData data) {
+        WSSession.getInstance().users = data;
+        updateControlFragment(selectedDate);
+    }
+    private void requestLoadInitial(Date viewDate) {
+        setEnabledScene(false);
+        WSSession session = WSSession.getInstance();
+        WSClient.loadUsers(session.token)
+                .thenCompose(usersData -> {
+                    return WSClient.getMonthData(WSSession.getInstance().token, viewDate)
+                            .thenApply(monthData -> Pair.create(usersData, monthData));
+                })
+                .whenCompleteAsync((pair, throwable) -> {
+                    setEnabledScene(true);
+                    if(throwable == null) {  // при успехе
+                        this.updateUsers(pair.first);
+                        this.updateMonthData(viewDate, pair.second);
+                    } else {  // при ошибке
+                        ClientUtils.showNetworkError(this, throwable, this::finish);
+                    }
+                }, WSClient.MAIN);
+    }
+
+    private void requestLoadDataForMonth(Date viewDate) {
+        setEnabledScene(false);
+        WSClient.getMonthData(WSSession.getInstance().token, viewDate)
+                .whenCompleteAsync((monthData, throwable) -> {
+                    setEnabledScene(true);
+                    if(throwable == null) {  // при успехе
+                        this.updateMonthData(viewDate, monthData);
+                    } else {  // при ошибке
+                        ClientUtils.showNetworkError(this, throwable, this::finish);
+                    }
+                }, WSClient.MAIN);
+    }
+
+    private void requestAutoFill() {
+        setEnabledScene(false);
+        Date date = selectedDate;
+        WSClient.autifill(WSSession.getInstance().token, date)
+                .whenCompleteAsync((monthData, throwable) -> {
+                    setEnabledScene(true);
+                    if(throwable == null) {  // при успехе
+                        this.updateMonthData(date, monthData);
+                    } else {  // при ошибке
+                        ClientUtils.showNetworkError(this, throwable, this::finish);
+                    }
+                }, WSClient.MAIN);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        } else if (itemId == R.id.auto_fill) {
+            requestAutoFill();
+            Toast.makeText(this, "Clicked Menu 1", Toast.LENGTH_SHORT).show();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
+    private void removeControlFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.fragment_placeholder, CalendarBlockedFragment.class, new Bundle())
+                .commit();
+    }
+    private int calcMonths(Date date) {
+        return date.getYear() * 12 + date.getMonth();
+    }
+    private int compareMonth(Date left, Date right) {
+        return calcMonths(left) - calcMonths(right);
+    }
     private void updateControlFragment(Date date) {
-        boolean isDayBlocked;
-        if(getIntent().getBooleanExtra("can-edit-since-now", false)) {
-            Date now = new Date();
-            Instant dateInstant = date.toInstant()
-                    .truncatedTo(ChronoUnit.DAYS);
-            Instant nowInstant = now.toInstant()
-                    .truncatedTo(ChronoUnit.DAYS);
-            Log.d("Test", "dateInstant: " + dateInstant);
-            Log.d("Test", "nowInstant: " + nowInstant);
-            isDayBlocked = dateInstant.isBefore(nowInstant);
-        } else {
-            int viewMonth = date.getYear() * 12 + date.getMonth();
-            Date now = new Date();
-            int nowMonth = now.getYear() * 12 + now.getMonth();
-            isDayBlocked = viewMonth <= nowMonth;
+        binding.currentDay.setText(RuLang.formatDayMonth(date));
+        boolean isMonthBlocked = compareMonth(date, new Date()) <= 0;  // viewMonth <= nowMonth
+        if(isMonthBlocked) {
+            if(getIntent().getBooleanExtra("can-edit-since-now", false)) {
+                isMonthBlocked = compareMonth(date, new Date()) < 0;
+            }
         }
 
-        if (isDayBlocked) {
+        if (isMonthBlocked) {
             // добавить блокирующий фрагмент
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
@@ -109,6 +202,8 @@ public class CalendarActivity extends AppCompatActivity {
                     .commit();
         } else {
             // добавить фрагмент с контролем
+            Bundle args = new Bundle();
+            args.putLong("date", date.getTime());
             WSSession session = WSSession.getInstance();
             Class<? extends Fragment> fragmentClass =
                     session.role == WSSession.Role.USER ?
@@ -116,9 +211,31 @@ public class CalendarActivity extends AppCompatActivity {
                             CalendarAdminFragment.class;
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
-                    .replace(R.id.fragment_placeholder, fragmentClass, new Bundle())
+                    .replace(R.id.fragment_placeholder, fragmentClass, args)
                     .commit();
         }
     }
 
+    public Date getSelectedDate() {
+        return selectedDate;
+    }
+
+    public List<Order> getOrders(Date date) {
+        MonthData data = loadedMonths.get(calcMonths(date));
+        if(data == null) return Collections.emptyList();
+        int dayOfMonth = date.getDate();  // [1:31]
+        List<Order> orders = data.ordersByDay.get(dayOfMonth);
+        if(orders == null) return Collections.emptyList();
+        return orders;
+    }
+
+    public void updateOrders(Date date, List<Order> orders) {
+        MonthData data = loadedMonths.get(calcMonths(date));
+        if(data == null) {
+            data = new MonthData();
+            loadedMonths.put(calcMonths(date), data);
+        }
+        int dayOfMonth = date.getDate();  // [1:31]
+        data.ordersByDay.put(dayOfMonth, orders);
+    }
 }

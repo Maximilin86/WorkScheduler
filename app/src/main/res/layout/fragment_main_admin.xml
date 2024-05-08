@@ -18,44 +18,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/textView9"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Админ"
-                android:textAlignment="center"
-                android:textColor="#FF6868"
-                android:textSize="18sp" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="24dp" />
-
-            <TextView
-                android:id="@+id/edit_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Управление сменами на Месяц Год"
-                android:textAlignment="center"
-                android:textSize="18sp" />
-
             <Button
-                android:id="@+id/smena_auto"
+                android:id="@+id/users_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Автозаполнение" />
-
-            <Button
-                android:id="@+id/smena_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Редактирование" />
-
-            <Button
-                android:id="@+id/button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Button" />
+                android:padding="30dp"
+                android:text="Сотрудники" />
 
         </LinearLayout>
 

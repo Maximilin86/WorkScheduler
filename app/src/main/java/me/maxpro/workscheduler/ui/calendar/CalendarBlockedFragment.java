@@ -38,9 +38,4 @@ public class CalendarBlockedFragment extends Fragment implements CalendarFragmen
         view.bringToFront();
     }
 
-    @Override
-    public void onSelectDate(Date date) {
-
-    }
-
 }

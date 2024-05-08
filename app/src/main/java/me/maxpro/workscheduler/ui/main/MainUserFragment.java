@@ -41,15 +41,7 @@ public class MainUserFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.calendarButton.setOnClickListener(view_ -> {
-            openCalendarActivity();
-        });
     }
 
-    private void openCalendarActivity() {
-        Intent a = new Intent(getContext(), CalendarActivity.class);
-        a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        startActivity(a);
-    }
 
 }

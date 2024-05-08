@@ -11,13 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.Date;
-
-import me.maxpro.workscheduler.CalendarActivity;
-import me.maxpro.workscheduler.R;
+import me.maxpro.workscheduler.SelectUserListActivity;
 import me.maxpro.workscheduler.databinding.FragmentMainAdminBinding;
-import me.maxpro.workscheduler.databinding.FragmentMainUserBinding;
-import me.maxpro.workscheduler.utils.RuLang;
 
 public class MainAdminFragment extends Fragment {
 
@@ -41,23 +36,30 @@ public class MainAdminFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Date now = new Date();
-        now.setMonth(now.getMonth() + 1);
-        binding.editTitle.setText("Управление сменами на " + RuLang.formatMonthYear(now));
-        binding.smenaAuto.setOnClickListener(view_ -> {
+        binding.usersButton.setOnClickListener(view_ -> {
+            openUserListActivity();
+        });
 
-        });
-        binding.smenaEdit.setOnClickListener(view_ -> {
-            openCalendarActivity();
-        });
+//        binding.editTitle.setText("Управление сменами на " + RuLang.formatMonthYear(now));
     }
 
-    private void openCalendarActivity() {
-        Intent a = new Intent(getContext(), CalendarActivity.class);
+    private void openUserListActivity() {
+        Intent a = new Intent(getContext(), SelectUserListActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        a.putExtra("start-with-next-month", true);
-        a.putExtra("can-edit-since-now", true);
+        a.putExtra("reload-users", true);
         startActivity(a);
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+

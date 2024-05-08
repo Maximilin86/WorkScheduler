@@ -4,6 +4,5 @@ import java.util.Date;
 
 public interface CalendarFragment {
 
-    void onSelectDate(Date date);
 
 }

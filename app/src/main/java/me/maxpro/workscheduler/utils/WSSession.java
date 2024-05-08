@@ -2,6 +2,9 @@ package me.maxpro.workscheduler.utils;
 
 import androidx.annotation.Nullable;
 
+import me.maxpro.workscheduler.client.data.LoginData;
+import me.maxpro.workscheduler.client.data.UsersData;
+
 public class WSSession {
 
     private static WSSession INSTANCE = null;
@@ -15,10 +18,11 @@ public class WSSession {
     public String token = null;
     public Role role = Role.USER;
     public String displayName = null;
+    public UsersData users = null;
 
     public WSSession() {}
 
-    public void initFromLogin(WSClient.LoginArgs args) {
+    public void initFromLogin(LoginData args) {
         token = args.token;
         role = args.role;
         displayName = args.displayName;

@@ -20,6 +20,27 @@
             android:textAlignment="center"
             android:textSize="22sp" />
 
+        <TextView
+            android:id="@+id/role_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Админ"
+            android:textAlignment="center"
+            android:textColor="#FF6868"
+            android:textSize="18sp"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+        <Button
+            android:id="@+id/calendar_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="30dp"
+            android:text="Календарь" />
+
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/main_fragment"
             android:layout_width="match_parent"

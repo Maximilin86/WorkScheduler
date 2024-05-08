@@ -41,18 +41,6 @@ public class CustomCalendarWidget {
     private void init() {
 
         this.view.setDayColumnNames(new String[] {"Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"});
-
-        {
-
-            Instant day = Instant.now().plus(1, ChronoUnit.DAYS);
-            Event ev1 = new Event(withValue(Color.GREEN, unselectedBrightness), day.toEpochMilli(), "Some extra data that I want to store.");
-            this.view.addEvent(ev1);
-        }
-        {
-            Instant day = Instant.now().plus(3, ChronoUnit.DAYS);
-            Event ev1 = new Event(withValue(Color.RED, unselectedBrightness), day.toEpochMilli(), "Some extra data that I want to store.");
-            this.view.addEvent(ev1);
-        }
         this.view.setCurrentDayBackgroundColor(currentDayColor.toArgb());
         this.view.setCurrentSelectedDayBackgroundColor(getCurrentColor(new Date()));
         updateIndicator(new Date());
@@ -116,6 +104,15 @@ public class CustomCalendarWidget {
     }
     public void onMonthChanged(Consumer<Date> callback) {
         this.monthChangedCallbacks.add(callback);
+    }
+
+    public void addEvent(Date date, int color, Object data) {
+        Event ev1 = new Event(
+                withValue(color, unselectedBrightness),
+                date.toInstant().toEpochMilli(),
+                data
+        );
+        this.view.addEvent(ev1);
     }
 
 }

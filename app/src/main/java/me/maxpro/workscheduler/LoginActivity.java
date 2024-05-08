@@ -3,6 +3,7 @@ package me.maxpro.workscheduler;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -12,19 +13,19 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import me.maxpro.workscheduler.utils.WSClient;
+import me.maxpro.workscheduler.client.ClientUtils;
+import me.maxpro.workscheduler.client.WSClient;
+import me.maxpro.workscheduler.databinding.ActivityCalendarBinding;
+import me.maxpro.workscheduler.databinding.ActivityLoginBinding;
 import me.maxpro.workscheduler.utils.WSSession;
 
 public class LoginActivity extends AppCompatActivity  {
-    Button loginButton, cancelButton;
-    EditText loginField, passwordField;
-    LinearLayout root;
-    TextView tx1;
-    int counter = 3;
+
+    private ActivityLoginBinding binding;
 
     private void setEnabledScene(boolean value) {
-        for (int i = 0; i < root.getChildCount(); i++) {
-            root.getChildAt(i).setEnabled(value);
+        for (int i = 0; i < binding.root.getChildCount(); i++) {
+            binding.root.getChildAt(i).setEnabled(value);
         }
     }
 
@@ -38,30 +39,28 @@ public class LoginActivity extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle("Планировщик смен");
+        }
 
         WSSession.getInstance().url = getResources().getString(R.string.server_url);
         Log.d("Test", "url: " + WSSession.getInstance().url);
 
-        loginButton = (Button)findViewById(R.id.login_button);
-        loginField = (EditText)findViewById(R.id.login_field);
-        passwordField = (EditText)findViewById(R.id.password_field);
-        root = (LinearLayout) findViewById(R.id.root);
-        cancelButton = (Button)findViewById(R.id.cancel_button);
-        tx1 = (TextView)findViewById(R.id.textView3);
-        tx1.setVisibility(View.GONE);
-
-        loginButton.setOnClickListener(view -> {
+        binding.loginButton.setOnClickListener(view -> {
 //            Log.d("Test", "Login " + loginField.getText().toString() + " " + passwordField.getText().toString());
             setEnabledScene(false);
-            WSClient.Login(loginField.getText().toString(), passwordField.getText().toString())
+            WSClient.login(binding.loginField.getText().toString(), binding.passwordField.getText().toString())
                     .whenCompleteAsync((s, throwable) -> setEnabledScene(true), WSClient.MAIN)  // в любом случае
                     .thenAcceptAsync(args -> {
                         WSSession.getInstance().initFromLogin(args);
                         openMenuActivity();
                     }, WSClient.MAIN)  // при успехе
                     .handleAsync((unused, throwable) -> {  // при ошибке
-                        WSClient.showNetworkError(view.getContext(), throwable);
+                        ClientUtils.showNetworkError(view.getContext(), throwable, () -> {});
                         return null;
                     }, WSClient.MAIN);
 //            if(loginField.getText().toString().equals("admin") && passwordField.getText().toString().equals("admin")) {
@@ -78,7 +77,7 @@ public class LoginActivity extends AppCompatActivity  {
 //                }
 //            }
         });
-        cancelButton.setOnClickListener(view -> finish());
+        binding.cancelButton.setOnClickListener(view -> finish());
     }
 
 }
