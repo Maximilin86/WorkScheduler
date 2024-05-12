@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MonthData {
+public class OrdersData {
 
     public final Map<Integer, List<Order>> ordersByDay = new HashMap<>();
 

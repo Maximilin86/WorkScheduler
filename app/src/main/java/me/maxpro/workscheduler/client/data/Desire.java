@@ -3,16 +3,14 @@ package me.maxpro.workscheduler.client.data;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class Order {
+public class Desire {
 
 
-    public final int userId;
-    public final Type order;
+    public final Type desire;
     public final String comment;
 
-    public Order(int userId, Type order, String comment) {
-        this.userId = userId;
-        this.order = order;
+    public Desire(Type desire, String comment) {
+        this.desire = desire;
         this.comment = comment;
     }
 
@@ -50,14 +48,13 @@ public class Order {
         public String getDisplayName() {
             return this.displayName;
         }
-
     }
 
     @NonNull
     @Override
     public String toString() {
-        if(this.order == null) return "Не выбрано";
-        return this.order.getDisplayName();
+        if(this.desire == null) return "Не выбрано";
+        return this.desire.getDisplayName();
     }
 
 }

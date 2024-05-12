@@ -49,13 +49,6 @@ public class SelectUserListActivity extends AppCompatActivity {
         } else {
             updateUsers(WSSession.getInstance().users);
         }
-
-        binding.userList.setOnItemClickListener((parent, view, position, id) -> {
-            User user = (User) parent.getItemAtPosition(position);
-
-            Toast toast = Toast.makeText(getApplicationContext(), user.id + " " + user.login, Toast.LENGTH_SHORT);
-            toast.show();
-        });
     }
 
     private void updateUsers(UsersData data) {

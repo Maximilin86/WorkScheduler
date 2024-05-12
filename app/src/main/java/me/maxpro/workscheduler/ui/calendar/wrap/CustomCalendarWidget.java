@@ -32,16 +32,17 @@ public class CustomCalendarWidget {
     }
 
     private void updateIndicator(Date dateClicked) {
-        if(isSameDay(dateClicked, new Date())) {
-            view.setCurrentSelectedDayIndicatorStyle(CompactCalendarView.FILL_LARGE_INDICATOR);
-        } else {
-            view.setCurrentSelectedDayIndicatorStyle(CompactCalendarView.NO_FILL_LARGE_INDICATOR);
-        }
+//        if(isSameDay(dateClicked, new Date())) {
+//            view.setCurrentSelectedDayIndicatorStyle(CompactCalendarView.FILL_LARGE_INDICATOR);
+//        } else {
+//        }
+        view.setCurrentSelectedDayIndicatorStyle(CompactCalendarView.NO_FILL_LARGE_INDICATOR);
     }
     private void init() {
 
         this.view.setDayColumnNames(new String[] {"Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"});
-        this.view.setCurrentDayBackgroundColor(currentDayColor.toArgb());
+//        this.view.setCurrentDayBackgroundColor(currentDayColor.toArgb());
+        this.view.setCurrentDayIndicatorStyle(CompactCalendarView.NO_FILL_LARGE_INDICATOR);
         this.view.setCurrentSelectedDayBackgroundColor(getCurrentColor(new Date()));
         updateIndicator(new Date());
         this.view.setListener(new CompactCalendarView.CompactCalendarViewListener() {
@@ -95,7 +96,7 @@ public class CustomCalendarWidget {
         for (Event event : this.view.getEvents(dateClicked)) {
             return withValue(event.getColor(), selectedBrightness);
         }
-        if(isSameDay(dateClicked, new Date())) return withValue(currentDayColor.toArgb(), selectedBrightness - 0.1f);
+//        if(isSameDay(dateClicked, new Date())) return withValue(currentDayColor.toArgb(), selectedBrightness - 0.1f);
         return selectedColor.toArgb();
     }
 

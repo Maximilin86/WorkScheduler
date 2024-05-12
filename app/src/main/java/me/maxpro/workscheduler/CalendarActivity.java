@@ -2,10 +2,12 @@ package me.maxpro.workscheduler;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
@@ -19,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import me.maxpro.workscheduler.client.ClientUtils;
-import me.maxpro.workscheduler.client.data.MonthData;
+import me.maxpro.workscheduler.client.data.Desire;
+import me.maxpro.workscheduler.client.data.DesiresData;
+import me.maxpro.workscheduler.client.data.OrdersData;
 import me.maxpro.workscheduler.client.data.Order;
 import me.maxpro.workscheduler.client.data.UsersData;
 import me.maxpro.workscheduler.databinding.ActivityCalendarBinding;
@@ -37,8 +41,8 @@ public class CalendarActivity extends AppCompatActivity {
     private ActivityCalendarBinding binding;
     private CustomCalendarWidget customCalendarWidget;
     private Date selectedDate;
-    private final Map<Integer, MonthData> loadedMonths = new HashMap<>();
-
+    private final Map<Integer, OrdersData> cachedMonthOrders = new HashMap<>();
+    private final Map<Integer, DesiresData> cachedMonthDesires = new HashMap<>();
 
 
     @Override
@@ -46,7 +50,6 @@ public class CalendarActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.calendar_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +75,12 @@ public class CalendarActivity extends AppCompatActivity {
         binding.compactcalendarView.setCurrentDate(viewDate);
 
 
-        requestLoadInitial(viewDate);
+        WSSession session = WSSession.getInstance();
+        if (session.role == WSSession.Role.ADMIN) {
+            requestAdminLoadInitial(viewDate);
+        } else {
+            requestUserLoadData(viewDate);
+        }
 
         // Показывание текущего месяца
         binding.currentMonth.setText(RuLang.formatMonthYear(binding.compactcalendarView.getFirstDayOfCurrentMonth()));
@@ -82,14 +90,18 @@ public class CalendarActivity extends AppCompatActivity {
         binding.currentDay.setText(RuLang.formatDayMonth(new Date()));
         customCalendarWidget.onDayChanged(date -> {
             selectedDate = date;
-            if(loadedMonths.containsKey(calcMonths(date))) {  // prevent change dates while data loading
+            if(cachedMonthOrders.containsKey(calcEpochMonthNumber(date))) {  // prevent change dates while data loading
                 updateControlFragment(date);
             }
         });
         customCalendarWidget.onMonthChanged(date -> {
-            if(!loadedMonths.containsKey(calcMonths(date))) {
+            if(!cachedMonthOrders.containsKey(calcEpochMonthNumber(date))) {
                 removeControlFragment();
-                requestLoadDataForMonth(date);
+                if (session.role == WSSession.Role.ADMIN) {
+                    requestLoadDataForMonth(date);
+                } else {
+                    requestUserLoadData(date);
+                }
             }
         });
     }
@@ -98,34 +110,99 @@ public class CalendarActivity extends AppCompatActivity {
 
     }
 
-    private void updateMonthData(Date date, MonthData data) {
-        for (Map.Entry<Integer, List<Order>> entry : data.ordersByDay.entrySet()) {
-            int dayOfMonth = entry.getKey();  // [1:31]
-            date.setDate(dayOfMonth);
-            customCalendarWidget.addEvent(date, Color.GREEN, "Event");
+    public void renderDayOrders(Date day, List<Order> orders) {
+        boolean hasAllDay = false;
+        boolean hasWork8h = false;
+        for (Order order : orders) {
+            if (order.order == Order.Type.ALL_DAY) {
+                hasAllDay = true;
+            }
+            if (order.order == Order.Type.WORK) {
+                hasWork8h = true;
+            }
         }
+        customCalendarWidget.view.removeEvents(day);
+        if(!hasAllDay && !hasWork8h) return;
+        WSSession session = WSSession.getInstance();
+        if (session.role == WSSession.Role.USER) {
+            if(hasAllDay) {
+                customCalendarWidget.addEvent(day, Color.GREEN, "Event");
+                return;
+            }
+            if(hasWork8h) {
+                customCalendarWidget.addEvent(day, Color.YELLOW, "Event");
+                return;
+            }
+            return;
+        }
+        if(hasAllDay && hasWork8h) {
+            customCalendarWidget.addEvent(day, Color.GREEN, "Event");
+            return;
+        }
+        customCalendarWidget.addEvent(day, Color.YELLOW, "Event");
+    }
+    private void updateDesiresData(Date date, DesiresData data) {
+        cachedMonthDesires.put(calcEpochMonthNumber(date), data);
         if(compareMonth(date, selectedDate) != 0) return;
-        loadedMonths.put(calcMonths(date), data);
+    }
+    private void updateOrdersData(Date date, OrdersData data) {
+        cachedMonthOrders.put(calcEpochMonthNumber(date), data);
+        if(compareMonth(date, selectedDate) != 0) return;  // prevent visual bugs
+        for (int dayOfMonth = 1; dayOfMonth <= 31; dayOfMonth++) {
+            Date tmp = new Date(date.getTime());
+            tmp.setDate(dayOfMonth);
+            if(tmp.getMonth() != date.getMonth()) break;
+            List<Order> orders = data.ordersByDay.getOrDefault(dayOfMonth, Collections.emptyList());
+            renderDayOrders(tmp, orders);
+        }
         updateControlFragment(selectedDate);
+    }
+    public void updateOrders(Date date, List<Order> orders) {
+        OrdersData data = cachedMonthOrders.get(calcEpochMonthNumber(date));
+        if(data == null) {
+            data = new OrdersData();
+            cachedMonthOrders.put(calcEpochMonthNumber(date), data);
+        }
+        int dayOfMonth = date.getDate();  // [1:31]
+        data.ordersByDay.put(dayOfMonth, orders);
+        renderDayOrders(date, orders);
     }
 
     private void updateUsers(UsersData data) {
         WSSession.getInstance().users = data;
         updateControlFragment(selectedDate);
     }
-    private void requestLoadInitial(Date viewDate) {
+    private void requestUserLoadData(Date viewDate) {
+        setEnabledScene(false);
+        WSSession session = WSSession.getInstance();
+        WSClient.getDesireData(session.token, viewDate)
+                .thenCompose(desiresData -> {
+                    return WSClient.getMonthData(WSSession.getInstance().token, viewDate)
+                            .thenApply(ordersData -> Pair.create(desiresData, ordersData));
+                })
+                .whenCompleteAsync((pair, throwable) -> {
+                    setEnabledScene(true);
+                    if(throwable == null) {  // при успехе
+                        this.updateDesiresData(viewDate, pair.first);
+                        this.updateOrdersData(viewDate, pair.second);
+                    } else {  // при ошибке
+                        ClientUtils.showNetworkError(this, throwable, this::finish);
+                    }
+                }, WSClient.MAIN);
+    }
+    private void requestAdminLoadInitial(Date viewDate) {
         setEnabledScene(false);
         WSSession session = WSSession.getInstance();
         WSClient.loadUsers(session.token)
                 .thenCompose(usersData -> {
                     return WSClient.getMonthData(WSSession.getInstance().token, viewDate)
-                            .thenApply(monthData -> Pair.create(usersData, monthData));
+                            .thenApply(ordersData -> Pair.create(usersData, ordersData));
                 })
                 .whenCompleteAsync((pair, throwable) -> {
                     setEnabledScene(true);
                     if(throwable == null) {  // при успехе
                         this.updateUsers(pair.first);
-                        this.updateMonthData(viewDate, pair.second);
+                        this.updateOrdersData(viewDate, pair.second);
                     } else {  // при ошибке
                         ClientUtils.showNetworkError(this, throwable, this::finish);
                     }
@@ -135,10 +212,10 @@ public class CalendarActivity extends AppCompatActivity {
     private void requestLoadDataForMonth(Date viewDate) {
         setEnabledScene(false);
         WSClient.getMonthData(WSSession.getInstance().token, viewDate)
-                .whenCompleteAsync((monthData, throwable) -> {
+                .whenCompleteAsync((ordersData, throwable) -> {
                     setEnabledScene(true);
                     if(throwable == null) {  // при успехе
-                        this.updateMonthData(viewDate, monthData);
+                        this.updateOrdersData(viewDate, ordersData);
                     } else {  // при ошибке
                         ClientUtils.showNetworkError(this, throwable, this::finish);
                     }
@@ -149,10 +226,10 @@ public class CalendarActivity extends AppCompatActivity {
         setEnabledScene(false);
         Date date = selectedDate;
         WSClient.autifill(WSSession.getInstance().token, date)
-                .whenCompleteAsync((monthData, throwable) -> {
+                .whenCompleteAsync((ordersData, throwable) -> {
                     setEnabledScene(true);
                     if(throwable == null) {  // при успехе
-                        this.updateMonthData(date, monthData);
+                        this.updateOrdersData(date, ordersData);
                     } else {  // при ошибке
                         ClientUtils.showNetworkError(this, throwable, this::finish);
                     }
@@ -179,11 +256,11 @@ public class CalendarActivity extends AppCompatActivity {
                 .replace(R.id.fragment_placeholder, CalendarBlockedFragment.class, new Bundle())
                 .commit();
     }
-    private int calcMonths(Date date) {
+    private int calcEpochMonthNumber(Date date) {
         return date.getYear() * 12 + date.getMonth();
     }
     private int compareMonth(Date left, Date right) {
-        return calcMonths(left) - calcMonths(right);
+        return calcEpochMonthNumber(left) - calcEpochMonthNumber(right);
     }
     private void updateControlFragment(Date date) {
         binding.currentDay.setText(RuLang.formatDayMonth(date));
@@ -221,7 +298,7 @@ public class CalendarActivity extends AppCompatActivity {
     }
 
     public List<Order> getOrders(Date date) {
-        MonthData data = loadedMonths.get(calcMonths(date));
+        OrdersData data = cachedMonthOrders.get(calcEpochMonthNumber(date));
         if(data == null) return Collections.emptyList();
         int dayOfMonth = date.getDate();  // [1:31]
         List<Order> orders = data.ordersByDay.get(dayOfMonth);
@@ -229,13 +306,19 @@ public class CalendarActivity extends AppCompatActivity {
         return orders;
     }
 
-    public void updateOrders(Date date, List<Order> orders) {
-        MonthData data = loadedMonths.get(calcMonths(date));
-        if(data == null) {
-            data = new MonthData();
-            loadedMonths.put(calcMonths(date), data);
-        }
+    @Nullable
+    public Desire getDesire(Date date) {
+        DesiresData data = cachedMonthDesires.get(calcEpochMonthNumber(date));
+        if(data == null) return null;
         int dayOfMonth = date.getDate();  // [1:31]
-        data.ordersByDay.put(dayOfMonth, orders);
+        return data.desiresByDay.get(dayOfMonth);
     }
+
+    public void setDesire(Date date, Desire desire) {
+        DesiresData data = cachedMonthDesires.get(calcEpochMonthNumber(date));
+        if(data == null) return;
+        int dayOfMonth = date.getDate();  // [1:31]
+        data.desiresByDay.put(dayOfMonth, desire);
+    }
+
 }

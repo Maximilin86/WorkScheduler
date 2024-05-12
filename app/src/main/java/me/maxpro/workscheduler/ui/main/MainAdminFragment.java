@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import me.maxpro.workscheduler.SelectUserListActivity;
+import me.maxpro.workscheduler.UserListActivity;
 import me.maxpro.workscheduler.databinding.FragmentMainAdminBinding;
 
 public class MainAdminFragment extends Fragment {
@@ -44,7 +45,7 @@ public class MainAdminFragment extends Fragment {
     }
 
     private void openUserListActivity() {
-        Intent a = new Intent(getContext(), SelectUserListActivity.class);
+        Intent a = new Intent(getContext(), UserListActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         a.putExtra("reload-users", true);
         startActivity(a);
