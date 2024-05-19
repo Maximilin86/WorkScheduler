@@ -2,7 +2,6 @@ package me.maxpro.workscheduler.utils;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,8 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import me.maxpro.workscheduler.CalendarActivity;
 
 public class ExampleLoader extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package me.maxpro.workscheduler.ui.calendar;
+package me.maxpro.workscheduler.ui.control;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,15 +9,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import java.util.Date;
+import me.maxpro.workscheduler.databinding.FragmentControlBlockedBinding;
 
-import me.maxpro.workscheduler.databinding.FragmentCalendarBlockedBinding;
+public class ControlBlockedFragment extends Fragment implements ControlFragment {
 
-public class CalendarBlockedFragment extends Fragment implements CalendarFragment {
+    private FragmentControlBlockedBinding binding;
 
-    private FragmentCalendarBlockedBinding binding;
-
-    public CalendarBlockedFragment() {
+    public ControlBlockedFragment() {
         // Required empty public constructor
     }
 
@@ -28,7 +26,7 @@ public class CalendarBlockedFragment extends Fragment implements CalendarFragmen
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentCalendarBlockedBinding.inflate(inflater, container, false);
+        binding = FragmentControlBlockedBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 

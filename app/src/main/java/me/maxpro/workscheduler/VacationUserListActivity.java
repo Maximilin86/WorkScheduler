@@ -1,16 +1,10 @@
 package me.maxpro.workscheduler;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 
@@ -21,28 +15,18 @@ import me.maxpro.workscheduler.client.ClientUtils;
 import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.client.data.User;
 import me.maxpro.workscheduler.client.data.UsersData;
-import me.maxpro.workscheduler.databinding.ActivityUserListBinding;
+import me.maxpro.workscheduler.databinding.ActivityVacationUserListBinding;
 import me.maxpro.workscheduler.utils.WSSession;
 
-public class UserListActivity extends AppCompatActivity {
+public class VacationUserListActivity extends AppCompatActivity {
 
-    private ActivityUserListBinding binding;
-    private ActivityResultLauncher<Intent> intentLauncher;
+    private ActivityVacationUserListBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityUserListBinding.inflate(getLayoutInflater());
+        binding = ActivityVacationUserListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        intentLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<>() {
-            @Override
-            public void onActivityResult(ActivityResult activityResult) {
-                if (activityResult.getResultCode() == Activity.RESULT_OK) {
-                    updateUsers(WSSession.getInstance().users);
-                }
-            }
-        });
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -59,19 +43,15 @@ public class UserListActivity extends AppCompatActivity {
 
         binding.userList.setOnItemClickListener((parent, view, position, id) -> {
             User user = (User) parent.getItemAtPosition(position);
-            openEditUserActivity(user.id);
-        });
-
-        binding.fab.setOnClickListener(v -> {
-            addUser();
+            openVacationListActivity(user.id);
         });
     }
 
-    private void openEditUserActivity(int userId) {
-        Intent a = new Intent(this, UserEditActivity.class);
+    private void openVacationListActivity(int userId) {
+        Intent a = new Intent(this, VacationListActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         a.putExtra("user_id", userId);
-        intentLauncher.launch(a);
+        startActivity(a);
     }
 
     private void updateUsers(UsersData data) {
@@ -105,6 +85,8 @@ public class UserListActivity extends AppCompatActivity {
                 }, WSClient.MAIN);
     }
 
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
@@ -113,20 +95,6 @@ public class UserListActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void addUser() {
-        setEnabledScene(false);
-        WSClient.addUser(WSSession.getInstance().token)
-                .whenCompleteAsync((user, throwable) -> {
-                    setEnabledScene(true);
-                    if(throwable == null) {  // при успехе
-                        WSSession.getInstance().users.byId.put(user.id, user);
-                        openEditUserActivity(user.id);
-                    } else {  // при ошибке
-                        ClientUtils.showNetworkError(this, throwable, this::finish);
-                    }
-                }, WSClient.MAIN);
     }
 
 }

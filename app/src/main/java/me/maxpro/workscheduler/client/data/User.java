@@ -40,13 +40,32 @@ public class User {
         this.role = role;
     }
 
-    @NonNull
-    @Override
-    public String toString() {
+    public String getShortName() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.firstName);
+        sb.append(' ');
+        if(!this.lastName.isEmpty()) {
+            sb.append(Character.toUpperCase(this.lastName.charAt(0)));
+            sb.append('.');
+        }
+        if(this.fathersName != null && !this.fathersName.isEmpty()) {
+            sb.append(Character.toUpperCase(this.fathersName.charAt(0)));
+            sb.append('.');
+        }
+        return sb.toString();
+    }
+
+    public String getFullName() {
         String out = firstName + " " + lastName;
         if(fathersName != null) {
             out += " " + fathersName;
         }
         return out;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return getFullName();
     }
 }

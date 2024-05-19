@@ -1,4 +1,4 @@
-package me.maxpro.workscheduler.ui.calendar;
+package me.maxpro.workscheduler.ui.control;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -23,24 +23,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import me.maxpro.workscheduler.CalendarActivity;
+import me.maxpro.workscheduler.ControlActivity;
 import me.maxpro.workscheduler.SelectUserListActivity;
 import me.maxpro.workscheduler.client.ClientUtils;
 import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.client.data.Order;
 import me.maxpro.workscheduler.client.data.User;
-import me.maxpro.workscheduler.databinding.FragmentCalendarAdminBinding;
+import me.maxpro.workscheduler.databinding.FragmentControlAdminBinding;
 import me.maxpro.workscheduler.utils.WSSession;
 
-public class CalendarAdminFragment extends Fragment implements CalendarFragment {
+public class ControlAdminFragment extends Fragment implements ControlFragment {
 
-    private FragmentCalendarAdminBinding binding;
+    private FragmentControlAdminBinding binding;
     private int selectedAllDayUserId = -1;
     private Date date;
-    private CalendarActivity parent;
+    private ControlActivity parent;
     private ActivityResultLauncher<Intent> intentLauncher;
 
-    public CalendarAdminFragment() {
+    public ControlAdminFragment() {
         // Required empty public constructor
     }
 
@@ -61,9 +61,8 @@ public class CalendarAdminFragment extends Fragment implements CalendarFragment 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        binding = FragmentCalendarAdminBinding.inflate(inflater, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentControlAdminBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -71,14 +70,14 @@ public class CalendarAdminFragment extends Fragment implements CalendarFragment 
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         date = new Date(getArguments().getLong("date"));
-        parent = (CalendarActivity) getActivity();
+        parent = (ControlActivity) getActivity();
         Objects.requireNonNull(parent);
 
         List<User> items = new ArrayList<>();
         items.add(new User(-1, "", "Не выбрано", "", "", WSSession.Role.USER));
         selectedAllDayUserId = -1;
         WSSession session = WSSession.getInstance();
-        for (User user : session.users.usersById.values()) {
+        for (User user : session.users.byId.values()) {
             items.add(user);
         }
 

@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import me.maxpro.workscheduler.client.ClientUtils;
 import me.maxpro.workscheduler.client.WSClient;
-import me.maxpro.workscheduler.databinding.ActivityCalendarBinding;
+import me.maxpro.workscheduler.databinding.ActivityControlBinding;
 import me.maxpro.workscheduler.databinding.ActivityLoginBinding;
 import me.maxpro.workscheduler.utils.WSSession;
 

@@ -9,10 +9,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.Date;
-
-import me.maxpro.workscheduler.client.ClientUtils;
-import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.databinding.ActivityMainBinding;
 import me.maxpro.workscheduler.ui.main.MainAdminFragment;
 import me.maxpro.workscheduler.ui.main.MainUserFragment;
@@ -71,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void openCalendarActivity() {
         WSSession session = WSSession.getInstance();
-        Intent a = new Intent(this, CalendarActivity.class);
+        Intent a = new Intent(this, ControlActivity.class);
         a.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         if(session.role == WSSession.Role.USER) {
             a.putExtra("start-with-next-month", true);

@@ -1,4 +1,4 @@
-package me.maxpro.workscheduler.ui.calendar;
+package me.maxpro.workscheduler.ui.control;
 
 import android.os.Bundle;
 
@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,23 +18,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import me.maxpro.workscheduler.CalendarActivity;
+import me.maxpro.workscheduler.ControlActivity;
 import me.maxpro.workscheduler.client.ClientUtils;
 import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.client.data.Desire;
 import me.maxpro.workscheduler.client.data.Order;
-import me.maxpro.workscheduler.client.data.User;
 import me.maxpro.workscheduler.utils.WSSession;
-import me.maxpro.workscheduler.databinding.FragmentCalendarUserBinding;
+import me.maxpro.workscheduler.databinding.FragmentControlUserBinding;
 
-public class CalendarUserFragment extends Fragment implements CalendarFragment {
+public class ControlUserFragment extends Fragment implements ControlFragment {
 
-    private FragmentCalendarUserBinding binding;
+    private FragmentControlUserBinding binding;
     private @Nullable Desire.Type selectedDesire = null;
     private Date date;
-    private CalendarActivity parent;
+    private ControlActivity parent;
 
-    public CalendarUserFragment() {
+    public ControlUserFragment() {
         // Required empty public constructor
     }
 
@@ -46,7 +44,7 @@ public class CalendarUserFragment extends Fragment implements CalendarFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentCalendarUserBinding.inflate(inflater, container, false);
+        binding = FragmentControlUserBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -54,11 +52,11 @@ public class CalendarUserFragment extends Fragment implements CalendarFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         date = new Date(getArguments().getLong("date"));
-        parent = (CalendarActivity) getActivity();
+        parent = (ControlActivity) getActivity();
         Objects.requireNonNull(parent);
 
-        CalendarViewModel calendarViewModel =
-                new ViewModelProvider(this).get(CalendarViewModel.class);
+        ControlViewModel controlViewModel =
+                new ViewModelProvider(this).get(ControlViewModel.class);
 
 
         List<Desire> items = new ArrayList<>();

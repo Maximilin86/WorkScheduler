@@ -9,23 +9,22 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import me.maxpro.workscheduler.client.ClientUtils;
 import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.client.data.User;
-import me.maxpro.workscheduler.databinding.ActivityEditUserBinding;
+import me.maxpro.workscheduler.databinding.ActivityUserEditBinding;
 import me.maxpro.workscheduler.utils.WSSession;
 
-public class EditUserActivity extends AppCompatActivity {
+public class UserEditActivity extends AppCompatActivity {
 
-    private ActivityEditUserBinding binding;
+    private ActivityUserEditBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_user);
-        binding = ActivityEditUserBinding.inflate(getLayoutInflater());
+        setContentView(R.layout.activity_user_edit);
+        binding = ActivityUserEditBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ActionBar actionBar = getSupportActionBar();
@@ -40,7 +39,7 @@ public class EditUserActivity extends AppCompatActivity {
             finish();
             return;
         }
-        User user = WSSession.getInstance().users.usersById.get(userId);
+        User user = WSSession.getInstance().users.byId.get(userId);
         if(user == null) {
             finish();
             return;

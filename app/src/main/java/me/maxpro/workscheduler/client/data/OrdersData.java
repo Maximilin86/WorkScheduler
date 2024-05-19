@@ -13,7 +13,7 @@ public class OrdersData {
 
     public final Map<Integer, List<Order>> ordersByDay = new HashMap<>();
 
-    public void parseOrdersByDay(JSONArray json) throws JSONException {
+    public void parse(JSONArray json) throws JSONException {
         for (int i = 0; i < json.length(); i++) {
             JSONObject byDay = json.getJSONObject(i);
             int day = byDay.getInt("day");

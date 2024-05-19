@@ -69,4 +69,7 @@ dependencies {
     // The compose calendar library
     implementation("com.kizitonwose.calendar:compose:2.5.0")
 
+    // Date range picker
+    implementation("io.github.architshah248.calendar:awesome-calendar:2.0.0")
+
 }

@@ -1,14 +1,14 @@
-package me.maxpro.workscheduler.ui.calendar;
+package me.maxpro.workscheduler.ui.control;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class CalendarViewModel extends ViewModel {
+public class ControlViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public CalendarViewModel() {
+    public ControlViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is dashboard fragment");
     }

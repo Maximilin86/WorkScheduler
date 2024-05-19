@@ -1,11 +1,10 @@
-package me.maxpro.workscheduler.ui.calendar.wrap;
+package me.maxpro.workscheduler.ui.control.wrap;
 
 import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 
 import androidx.annotation.NonNull;
 

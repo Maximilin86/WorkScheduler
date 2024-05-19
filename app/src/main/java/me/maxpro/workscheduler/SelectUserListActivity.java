@@ -2,7 +2,6 @@ package me.maxpro.workscheduler;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NavUtils;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,7 +10,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +35,7 @@ public class SelectUserListActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle("Сотрудники");
+            actionBar.setTitle("Сотрудники в день");
         }
 
         binding.userList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
@@ -53,7 +51,7 @@ public class SelectUserListActivity extends AppCompatActivity {
 
     private void updateUsers(UsersData data) {
         List<User> items = new ArrayList<>();
-        for (User user : data.usersById.values()) {
+        for (User user : data.byId.values()) {
             items.add(user);
         }
 

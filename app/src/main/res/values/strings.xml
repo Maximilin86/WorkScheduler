@@ -6,4 +6,16 @@
     <string name="title_activity_calendar">CalendarActivity</string>
     <!--    <string name="server_url">http://192.168.0.108:8000</string>-->
     <string name="server_url">http://192.168.1.101:8000</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="cdrp_mon">Пн</string>
+    <string name="cdrp_tue">Вт</string>
+    <string name="cdrp_wed">Ср</string>
+    <string name="cdrp_thu">Чт</string>
+    <string name="cdrp_fri">Пт</string>
+    <string name="cdrp_sat">Сб</string>
+    <string name="cdrp_sun">Вс</string>
+    <string name="title_activity_test">TestActivity</string>
+
 </resources>

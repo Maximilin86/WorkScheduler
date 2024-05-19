@@ -1,8 +1,6 @@
-package me.maxpro.workscheduler.ui.calendar.wrap;
+package me.maxpro.workscheduler.ui.control.wrap;
 
 import android.graphics.Color;
-import android.util.Log;
-import android.view.View;
 
 import com.github.sundeepk.compactcalendarview.CompactCalendarView;
 import com.github.sundeepk.compactcalendarview.domain.Event;
@@ -25,10 +23,12 @@ public class CustomCalendarWidget {
     final Color currentDayColor = Color.valueOf(withValue(0xFFBFBFBF, unselectedBrightness));
     final List<Consumer<Date>> dayChangedCallbacks = new ArrayList<>();
     final List<Consumer<Date>> monthChangedCallbacks = new ArrayList<>();
+    private Date selectedDate;
 
-    public CustomCalendarWidget(CompactCalendarView view) {
+    public CustomCalendarWidget(CompactCalendarView view, Date viewDate) {
         this.view = view;
         this.init();
+        this.setSelectedDate(viewDate);
     }
 
     private void updateIndicator(Date dateClicked) {
@@ -52,12 +52,14 @@ public class CustomCalendarWidget {
                 int color = getCurrentColor(dateClicked);
                 view.setCurrentSelectedDayBackgroundColor(color);
                 updateIndicator(dateClicked);
+                selectedDate = dateClicked;
                 for (Consumer<Date> callback : dayChangedCallbacks) callback.accept(dateClicked);
             }
 
             @Override
             public void onMonthScroll(Date firstDayOfNewMonth) {
                 view.setCurrentSelectedDayBackgroundColor(getCurrentColor(firstDayOfNewMonth));
+                selectedDate = firstDayOfNewMonth;
                 for (Consumer<Date> callback : dayChangedCallbacks) callback.accept(firstDayOfNewMonth);
                 for (Consumer<Date> callback : monthChangedCallbacks) callback.accept(firstDayOfNewMonth);
             }
@@ -114,6 +116,15 @@ public class CustomCalendarWidget {
                 data
         );
         this.view.addEvent(ev1);
+    }
+
+    public void setSelectedDate(Date viewDate) {
+        selectedDate = viewDate;
+        view.setCurrentDate(viewDate);
+    }
+
+    public Date getSelectedDate() {
+        return selectedDate;
     }
 
 }

@@ -25,6 +25,34 @@
                 android:padding="30dp"
                 android:text="Сотрудники" />
 
+            <Button
+                android:id="@+id/holidays_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                android:text="Праздничные дни" />
+
+            <Button
+                android:id="@+id/vacations_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                android:text="Отпуска" />
+
+            <Button
+                android:id="@+id/stats_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                android:text="Статистика" />
+
+            <Button
+                android:id="@+id/chat_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                android:text="Чат" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

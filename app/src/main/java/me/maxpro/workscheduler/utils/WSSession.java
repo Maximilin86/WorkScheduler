@@ -2,8 +2,12 @@ package me.maxpro.workscheduler.utils;
 
 import androidx.annotation.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import me.maxpro.workscheduler.client.data.LoginData;
 import me.maxpro.workscheduler.client.data.UsersData;
+import me.maxpro.workscheduler.client.data.VacationData;
 
 public class WSSession {
 
@@ -19,6 +23,7 @@ public class WSSession {
     public Role role = Role.USER;
     public String displayName = null;
     public UsersData users = null;
+    public final Map<Integer, VacationData> vacationsByUser = new HashMap();
 
     public WSSession() {}
 

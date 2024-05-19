@@ -31,4 +31,10 @@ public class RuLang {
         return day + " " + formatMonth2(date);
     }
 
+    public static int getRuDayOfWeek(Date day) {
+        int enDayOfWeek = day.getDay();
+        if(enDayOfWeek == 0) return 6;  // sunday = вс
+        return enDayOfWeek - 1;
+    }
+
 }

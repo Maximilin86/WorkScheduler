@@ -40,6 +40,7 @@ import me.maxpro.workscheduler.client.data.OrdersData;
 import me.maxpro.workscheduler.client.data.Order;
 import me.maxpro.workscheduler.client.data.User;
 import me.maxpro.workscheduler.client.data.UsersData;
+import me.maxpro.workscheduler.client.data.VacationData;
 import me.maxpro.workscheduler.utils.WSSession;
 
 public class WSClient {
@@ -60,7 +61,7 @@ public class WSClient {
             OrdersData ordersData = new OrdersData();
             ClientUtils.parseMessage(() -> {
                 JSONArray ordersByDay = jsonResponse.getJSONArray("orders_by_day");
-                ordersData.parseOrdersByDay(ordersByDay);
+                ordersData.parse(ordersByDay);
             });
             return ordersData;
         }, EXECUTOR);
@@ -94,7 +95,7 @@ public class WSClient {
             OrdersData ordersData = new OrdersData();
             ClientUtils.parseMessage(() -> {
                 JSONArray ordersByDay = jsonResponse.getJSONArray("orders_by_day");
-                ordersData.parseOrdersByDay(ordersByDay);
+                ordersData.parse(ordersByDay);
             });
             return ordersData;
         }, EXECUTOR);
@@ -113,6 +114,23 @@ public class WSClient {
                 monthData.parseUsers(users);
             });
             return monthData;
+        }, EXECUTOR);
+    }
+
+    public static CompletableFuture<VacationData> loadVacations(String token, int userId) {
+        return CompletableFuture.supplyAsync(() -> {  // Network thread
+            JSONObject jo = new JSONObject();
+            ClientUtils.buildMessage(() -> {
+                jo.put("token", token);
+                jo.put("target_user_id", userId);
+            });
+            JSONObject jsonResponse = postJson("/get_vacations", jo);
+            VacationData vacationsData = new VacationData();
+            ClientUtils.parseMessage(() -> {
+                JSONArray vacations = jsonResponse.getJSONArray("vacations");
+                vacationsData.parse(vacations);
+            });
+            return vacationsData;
         }, EXECUTOR);
     }
 

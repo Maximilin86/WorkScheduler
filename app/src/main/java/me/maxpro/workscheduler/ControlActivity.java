@@ -2,7 +2,6 @@ package me.maxpro.workscheduler;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -26,22 +25,21 @@ import me.maxpro.workscheduler.client.data.DesiresData;
 import me.maxpro.workscheduler.client.data.OrdersData;
 import me.maxpro.workscheduler.client.data.Order;
 import me.maxpro.workscheduler.client.data.UsersData;
-import me.maxpro.workscheduler.databinding.ActivityCalendarBinding;
-import me.maxpro.workscheduler.ui.calendar.CalendarAdminFragment;
-import me.maxpro.workscheduler.ui.calendar.CalendarBlockedFragment;
-import me.maxpro.workscheduler.ui.calendar.CalendarUserFragment;
-import me.maxpro.workscheduler.ui.calendar.wrap.CustomCalendarWidget;
+import me.maxpro.workscheduler.databinding.ActivityControlBinding;
+import me.maxpro.workscheduler.ui.control.ControlAdminFragment;
+import me.maxpro.workscheduler.ui.control.ControlBlockedFragment;
+import me.maxpro.workscheduler.ui.control.ControlUserFragment;
+import me.maxpro.workscheduler.ui.control.wrap.CustomCalendarWidget;
 import me.maxpro.workscheduler.utils.RuLang;
 import me.maxpro.workscheduler.client.WSClient;
 import me.maxpro.workscheduler.utils.WSSession;
 
 
-public class CalendarActivity extends AppCompatActivity {
+public class ControlActivity extends AppCompatActivity {
 
-    private ActivityCalendarBinding binding;
+    private ActivityControlBinding binding;
     private CustomCalendarWidget customCalendarWidget;
-    private Date selectedDate;
-    private final Map<Integer, OrdersData> cachedMonthOrders = new HashMap<>();
+    private final Map<Integer, OrdersData> cachedByMonth = new HashMap<>();
     private final Map<Integer, DesiresData> cachedMonthDesires = new HashMap<>();
 
 
@@ -54,26 +52,22 @@ public class CalendarActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityCalendarBinding.inflate(getLayoutInflater());
+        binding = ActivityControlBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle("Календарь");
+            actionBar.setTitle("Управление сменами");
         }
 
 //        LoaderManager.getInstance(this).restartLoader(0, null, mLoaderCallbacks);
-
-        customCalendarWidget = new CustomCalendarWidget(binding.compactcalendarView);
 
         Date viewDate = new Date();
         if(getIntent().getBooleanExtra("start-with-next-month", false)) {
             viewDate.setMonth(viewDate.getMonth() + 1);
         }
-        selectedDate = viewDate;
-        binding.compactcalendarView.setCurrentDate(viewDate);
-
+        customCalendarWidget = new CustomCalendarWidget(binding.compactcalendarView, viewDate);
 
         WSSession session = WSSession.getInstance();
         if (session.role == WSSession.Role.ADMIN) {
@@ -89,13 +83,12 @@ public class CalendarActivity extends AppCompatActivity {
         // показывание выбранного дня
         binding.currentDay.setText(RuLang.formatDayMonth(new Date()));
         customCalendarWidget.onDayChanged(date -> {
-            selectedDate = date;
-            if(cachedMonthOrders.containsKey(calcEpochMonthNumber(date))) {  // prevent change dates while data loading
-                updateControlFragment(date);
+            if(cachedByMonth.containsKey(calcEpochMonthNumber(date))) {  // prevent change dates while data loading
+                updateControlFragment();
             }
         });
         customCalendarWidget.onMonthChanged(date -> {
-            if(!cachedMonthOrders.containsKey(calcEpochMonthNumber(date))) {
+            if(!cachedByMonth.containsKey(calcEpochMonthNumber(date))) {
                 removeControlFragment();
                 if (session.role == WSSession.Role.ADMIN) {
                     requestLoadDataForMonth(date);
@@ -143,11 +136,11 @@ public class CalendarActivity extends AppCompatActivity {
     }
     private void updateDesiresData(Date date, DesiresData data) {
         cachedMonthDesires.put(calcEpochMonthNumber(date), data);
-        if(compareMonth(date, selectedDate) != 0) return;
+        if(compareMonth(date, customCalendarWidget.getSelectedDate()) != 0) return;
     }
     private void updateOrdersData(Date date, OrdersData data) {
-        cachedMonthOrders.put(calcEpochMonthNumber(date), data);
-        if(compareMonth(date, selectedDate) != 0) return;  // prevent visual bugs
+        cachedByMonth.put(calcEpochMonthNumber(date), data);
+        if(compareMonth(date, customCalendarWidget.getSelectedDate()) != 0) return;  // prevent visual bugs
         for (int dayOfMonth = 1; dayOfMonth <= 31; dayOfMonth++) {
             Date tmp = new Date(date.getTime());
             tmp.setDate(dayOfMonth);
@@ -155,13 +148,13 @@ public class CalendarActivity extends AppCompatActivity {
             List<Order> orders = data.ordersByDay.getOrDefault(dayOfMonth, Collections.emptyList());
             renderDayOrders(tmp, orders);
         }
-        updateControlFragment(selectedDate);
+        updateControlFragment();
     }
     public void updateOrders(Date date, List<Order> orders) {
-        OrdersData data = cachedMonthOrders.get(calcEpochMonthNumber(date));
+        OrdersData data = cachedByMonth.get(calcEpochMonthNumber(date));
         if(data == null) {
             data = new OrdersData();
-            cachedMonthOrders.put(calcEpochMonthNumber(date), data);
+            cachedByMonth.put(calcEpochMonthNumber(date), data);
         }
         int dayOfMonth = date.getDate();  // [1:31]
         data.ordersByDay.put(dayOfMonth, orders);
@@ -170,7 +163,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private void updateUsers(UsersData data) {
         WSSession.getInstance().users = data;
-        updateControlFragment(selectedDate);
+        updateControlFragment();
     }
     private void requestUserLoadData(Date viewDate) {
         setEnabledScene(false);
@@ -224,7 +217,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private void requestAutoFill() {
         setEnabledScene(false);
-        Date date = selectedDate;
+        Date date = customCalendarWidget.getSelectedDate();
         WSClient.autifill(WSSession.getInstance().token, date)
                 .whenCompleteAsync((ordersData, throwable) -> {
                     setEnabledScene(true);
@@ -253,7 +246,7 @@ public class CalendarActivity extends AppCompatActivity {
     private void removeControlFragment() {
         getSupportFragmentManager().beginTransaction()
                 .setReorderingAllowed(true)
-                .replace(R.id.fragment_placeholder, CalendarBlockedFragment.class, new Bundle())
+                .replace(R.id.fragment_placeholder, ControlBlockedFragment.class, new Bundle())
                 .commit();
     }
     private int calcEpochMonthNumber(Date date) {
@@ -262,7 +255,8 @@ public class CalendarActivity extends AppCompatActivity {
     private int compareMonth(Date left, Date right) {
         return calcEpochMonthNumber(left) - calcEpochMonthNumber(right);
     }
-    private void updateControlFragment(Date date) {
+    private void updateControlFragment() {
+        Date date = customCalendarWidget.getSelectedDate();
         binding.currentDay.setText(RuLang.formatDayMonth(date));
         boolean isMonthBlocked = compareMonth(date, new Date()) <= 0;  // viewMonth <= nowMonth
         if(isMonthBlocked) {
@@ -275,7 +269,7 @@ public class CalendarActivity extends AppCompatActivity {
             // добавить блокирующий фрагмент
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
-                    .replace(R.id.fragment_placeholder, CalendarBlockedFragment.class, new Bundle())
+                    .replace(R.id.fragment_placeholder, ControlBlockedFragment.class, new Bundle())
                     .commit();
         } else {
             // добавить фрагмент с контролем
@@ -284,8 +278,8 @@ public class CalendarActivity extends AppCompatActivity {
             WSSession session = WSSession.getInstance();
             Class<? extends Fragment> fragmentClass =
                     session.role == WSSession.Role.USER ?
-                            CalendarUserFragment.class :
-                            CalendarAdminFragment.class;
+                            ControlUserFragment.class :
+                            ControlAdminFragment.class;
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.fragment_placeholder, fragmentClass, args)
@@ -293,12 +287,8 @@ public class CalendarActivity extends AppCompatActivity {
         }
     }
 
-    public Date getSelectedDate() {
-        return selectedDate;
-    }
-
     public List<Order> getOrders(Date date) {
-        OrdersData data = cachedMonthOrders.get(calcEpochMonthNumber(date));
+        OrdersData data = cachedByMonth.get(calcEpochMonthNumber(date));
         if(data == null) return Collections.emptyList();
         int dayOfMonth = date.getDate();  // [1:31]
         List<Order> orders = data.ordersByDay.get(dayOfMonth);
